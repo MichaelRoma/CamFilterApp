@@ -24,12 +24,12 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             }
         }
         
-        static func fromRawValue(_ value: String) -> CameraFilter? {
-            for type in CameraFilter.allCases {
-                if type.rawValue == value { return type }
-            }
-            return nil
-        }
+//        static func fromRawValue(_ value: String) -> CameraFilter? {
+//            for type in CameraFilter.allCases {
+//                if type.rawValue == value { return type }
+//            }
+//            return nil
+//        }
     }
     
     var captureSession: AVCaptureSession?
@@ -90,7 +90,9 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     }
     
     @objc func onFilterSelectionChanged(_ sender: UISegmentedControl) {
-        guard let filterName = CameraFilter.fromRawValue(sender.titleForSegment(at: sender.selectedSegmentIndex) ?? "")?.filterName else { return }
+        let title = sender.titleForSegment(at: sender.selectedSegmentIndex) ?? ""
+        let filterName = CameraFilter(rawValue: title)
+        guard let filterName = filterName?.filterName else { return }
         currentFilter = CIFilter(name: filterName)
     }
     
