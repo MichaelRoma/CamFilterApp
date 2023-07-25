@@ -32,10 +32,10 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         }
     }
     
-    var session: AVCaptureSession?
+    var captureSession: AVCaptureSession?
     
-    let context = CIContext()
-    var filter: CIFilter?
+    let ciContext = CIContext()
+    var currentFilter: CIFilter?
     
     
     let imageView = UIImageView(image: nil)
@@ -45,7 +45,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         let items = CameraFilter.allCases.map { filterName in filterName.rawValue }
         let filterControl = UISegmentedControl(items: items)
         filterControl.selectedSegmentIndex = 1
-        filterControl.addTarget(self, action: #selector(filterChanged), for: .valueChanged)
+        filterControl.addTarget(self, action: #selector(onFilterSelectionChanged), for: .valueChanged)
         filterControl.translatesAutoresizingMaskIntoConstraints = false
         
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -69,14 +69,14 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 guard granted else { return }
-                self?.setupCamera()
+                self?.configureCaptureSession()
             }
         case .restricted:
             break
         case .denied:
             break
         case .authorized:
-            setupCamera()
+            configureCaptureSession()
         @unknown default:
             break
         }
@@ -85,16 +85,16 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         DispatchQueue.global(qos:.userInitiated).async { [weak self] in
-            self?.session?.stopRunning()
+            self?.captureSession?.stopRunning()
         }
     }
     
-    @objc func filterChanged(_ sender: UISegmentedControl) {
+    @objc func onFilterSelectionChanged(_ sender: UISegmentedControl) {
         guard let filterName = CameraFilter.fromRawValue(sender.titleForSegment(at: sender.selectedSegmentIndex) ?? "")?.filterName else { return }
-        filter = CIFilter(name: filterName)
+        currentFilter = CIFilter(name: filterName)
     }
     
-    private func setupCamera() {
+    private func configureCaptureSession() {
         let session = AVCaptureSession()
         session.beginConfiguration()
         if let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
@@ -118,7 +118,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                 DispatchQueue.global(qos: .userInitiated).async {
                     session.startRunning()
                 }
-                self.session = session
+                self.captureSession = session
             }
             catch {
                 print(error)
@@ -131,7 +131,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         let image = CIImage(cvPixelBuffer: pixelBuffer)
         var finalImage: CIImage
         
-        if let filter = filter {
+        if let filter = currentFilter {
             filter.setValue(image, forKey: kCIInputImageKey)
             guard let outputImage = filter.outputImage else { return }
             finalImage = outputImage
@@ -139,7 +139,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             finalImage = image
         }
         
-        guard let cgImage = context.createCGImage(finalImage, from: finalImage.extent) else { return }
+        guard let cgImage = ciContext.createCGImage(finalImage, from: finalImage.extent) else { return }
         DispatchQueue.main.async { [weak self] in
             let outPutImage = UIImage(cgImage: cgImage)
             self?.imageView.image = outPutImage
