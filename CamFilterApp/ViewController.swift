@@ -11,7 +11,7 @@ import CoreImage
 
 class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
     
-    enum Filter: String, CaseIterable {
+    enum CameraFilter: String, CaseIterable {
         case effectNoir
         case normal
         case tonalEffect
@@ -24,8 +24,8 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             }
         }
         
-        static func fromRawValue(_ value: String) -> Filter? {
-            for type in Filter.allCases {
+        static func fromRawValue(_ value: String) -> CameraFilter? {
+            for type in CameraFilter.allCases {
                 if type.rawValue == value { return type }
             }
             return nil
@@ -42,7 +42,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let items = Filter.allCases.map { filterName in filterName.rawValue }
+        let items = CameraFilter.allCases.map { filterName in filterName.rawValue }
         let filterControl = UISegmentedControl(items: items)
         filterControl.selectedSegmentIndex = 1
         filterControl.addTarget(self, action: #selector(filterChanged), for: .valueChanged)
@@ -90,7 +90,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     }
     
     @objc func filterChanged(_ sender: UISegmentedControl) {
-        guard let filterName = Filter.fromRawValue(sender.titleForSegment(at: sender.selectedSegmentIndex) ?? "")?.filterName else { return }
+        guard let filterName = CameraFilter.fromRawValue(sender.titleForSegment(at: sender.selectedSegmentIndex) ?? "")?.filterName else { return }
         filter = CIFilter(name: filterName)
     }
     
