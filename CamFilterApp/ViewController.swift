@@ -9,37 +9,27 @@ import UIKit
 import AVFoundation
 import CoreImage
 
-class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
-    
-    enum CameraFilter: String, CaseIterable {
-        case effectNoir
+final class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
+    private enum CameraFilter: String, CaseIterable {
+        case colorInvert
         case normal
         case tonalEffect
         
         var filterName: String {
             switch self {
-            case .effectNoir: return "CIPhotoEffectNoir"
+            case .colorInvert: return "CIColorInvert"
             case .normal: return ""
             case .tonalEffect: return "CIPhotoEffectTonal"
             }
         }
-        
-//        static func fromRawValue(_ value: String) -> CameraFilter? {
-//            for type in CameraFilter.allCases {
-//                if type.rawValue == value { return type }
-//            }
-//            return nil
-//        }
     }
+   
+    private let ciContext = CIContext()
+    private let imageView = UIImageView()
     
-    var captureSession: AVCaptureSession?
-    
-    let ciContext = CIContext()
-    var currentFilter: CIFilter?
-    
-    
-    let imageView = UIImageView(image: nil)
-    
+    private var captureSession: AVCaptureSession?
+    private var currentFilter: CIFilter?
+   
     override func viewDidLoad() {
         super.viewDidLoad()
         let items = CameraFilter.allCases.map { filterName in filterName.rawValue }
@@ -89,10 +79,9 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         }
     }
     
-    @objc func onFilterSelectionChanged(_ sender: UISegmentedControl) {
+    @objc private func onFilterSelectionChanged(_ sender: UISegmentedControl) {
         let title = sender.titleForSegment(at: sender.selectedSegmentIndex) ?? ""
-        let filterName = CameraFilter(rawValue: title)
-        guard let filterName = filterName?.filterName else { return }
+        guard let filterName = CameraFilter(rawValue: title)?.filterName else { return }
         currentFilter = CIFilter(name: filterName)
     }
     
@@ -148,4 +137,3 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         }
     }
 }
-
